@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*" 
+           Name="RGB Control Center" 
+           Language="1033" 
+           Version="1.0.0.0" 
+           Manufacturer="RGB Gaming Solutions" 
+           UpgradeCode="D2B8E8B0-4F3A-4B2C-9E1D-5A7B3C9F2E8A">
+    
+    <Package InstallerVersion="200" 
+             Compressed="yes" 
+             InstallScope="perMachine" 
+             Description="RGB Control Center - Unified RGB Hardware Control"
+             Comments="Professional RGB lighting control for gaming hardware"
+             Manufacturer="RGB Gaming Solutions" />
+    
+    <MajorUpgrade DowngradeErrorMessage="A newer version of RGB Control Center is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+    
+    <!-- Application Icon -->
+    <Icon Id="RGBControlCenter.ico" SourceFile="assets\icon.ico" />
+    <Property Id="ARPPRODUCTICON" Value="RGBControlCenter.ico" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/rgbcontrolcenter/support" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/rgbcontrolcenter" />
+    <Property Id="ARPNOREPAIR" Value="1" />
+    
+    <!-- Features -->
+    <Feature Id="ProductFeature" Title="RGB Control Center" Level="1" Description="Main application and RGB controllers">
+      <ComponentGroupRef Id="RGBControlCenterFiles" />
+      <ComponentRef Id="ApplicationShortcut" />
+      <ComponentRef Id="DesktopShortcut" />
+      <ComponentRef Id="StartMenuShortcut" />
+      <ComponentRef Id="RegistryEntries" />
+    </Feature>
+    
+    <!-- Directory structure -->
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="INSTALLFOLDER" Name="RGB Control Center" />
+      </Directory>
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="RGB Control Center"/>
+      </Directory>
+      <Directory Id="DesktopFolder" Name="Desktop" />
+      <Directory Id="StartupFolder" Name="Startup" />
+    </Directory>
+    
+    <!-- Start Menu Shortcut -->
+    <DirectoryRef Id="ApplicationProgramsFolder">
+      <Component Id="StartMenuShortcut" Guid="1B2E3D4C-5A6B-4C8D-9E1F-2A3B4C5D6E7F">
+        <Shortcut Id="ApplicationStartMenuShortcut"
+                  Name="RGB Control Center"
+                  Description="Professional RGB lighting control for gaming hardware"
+                  Target="[INSTALLFOLDER]RGBControlCenter.exe"
+                  WorkingDirectory="INSTALLFOLDER"
+                  Icon="RGBControlCenter.ico"/>
+        <RemoveFolder Id="RemoveApplicationProgramsFolder" On="uninstall"/>
+        <RegistryValue Root="HKCU" 
+                       Key="Software\RGB Gaming Solutions\RGB Control Center" 
+                       Name="StartMenuShortcut" 
+                       Type="integer" 
+                       Value="1" 
+                       KeyPath="yes"/>
+      </Component>
+    </DirectoryRef>
+    
+    <!-- Desktop Shortcut -->
+    <DirectoryRef Id="DesktopFolder">
+      <Component Id="DesktopShortcut" Guid="2C3F4E5D-6B7A-5D9E-AF2E-3B4C5D6E7F8A">
+        <Shortcut Id="ApplicationDesktopShortcut"
+                  Name="RGB Control Center"
+                  Description="Professional RGB lighting control for gaming hardware"
+                  Target="[INSTALLFOLDER]RGBControlCenter.exe"
+                  WorkingDirectory="INSTALLFOLDER"
+                  Icon="RGBControlCenter.ico"/>
+        <RegistryValue Root="HKCU" 
+                       Key="Software\RGB Gaming Solutions\RGB Control Center" 
+                       Name="DesktopShortcut" 
+                       Type="integer" 
+                       Value="1" 
+                       KeyPath="yes"/>
+      </Component>
+    </DirectoryRef>
+    
+    <!-- Application Shortcut (for Uninstall) -->
+    <DirectoryRef Id="ApplicationProgramsFolder">
+      <Component Id="ApplicationShortcut" Guid="3D4E5F6A-7C8B-6EAF-BF3F-4C5D6E7F8A9B">
+        <Shortcut Id="UninstallProduct"
+                  Name="Uninstall RGB Control Center"
+                  Target="[SystemFolder]msiexec.exe"
+                  Arguments="/x [ProductCode]"
+                  Description="Uninstalls RGB Control Center" />
+        <RemoveFolder Id="RemoveApplicationProgramsFolder2" On="uninstall"/>
+        <RegistryValue Root="HKCU" 
+                       Key="Software\RGB Gaming Solutions\RGB Control Center" 
+                       Name="UninstallShortcut" 
+                       Type="integer" 
+                       Value="1" 
+                       KeyPath="yes"/>
+      </Component>
+    </DirectoryRef>
+    
+    <!-- Registry Entries -->
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Component Id="RegistryEntries" Guid="4E5F6A7B-8D9C-7FAE-CF4F-5D6E7F8A9B0C">
+        <RegistryKey Root="HKLM" Key="Software\RGB Gaming Solutions\RGB Control Center">
+          <RegistryValue Name="InstallPath" Type="string" Value="[INSTALLFOLDER]" />
+          <RegistryValue Name="Version" Type="string" Value="1.0.0.0" />
+          <RegistryValue Name="Publisher" Type="string" Value="RGB Gaming Solutions" />
+        </RegistryKey>
+        
+        <!-- File Association for RGB profiles -->
+        <RegistryKey Root="HKLM" Key="Software\Classes\.rgbprofile">
+          <RegistryValue Type="string" Value="RGBControlCenter.Profile" />
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="Software\Classes\RGBControlCenter.Profile">
+          <RegistryValue Type="string" Value="RGB Control Center Profile" />
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="Software\Classes\RGBControlCenter.Profile\shell\open\command">
+          <RegistryValue Type="string" Value="&quot;[INSTALLFOLDER]RGBControlCenter.exe&quot; &quot;%1&quot;" />
+        </RegistryKey>
+      </Component>
+    </DirectoryRef>
+    
+    <!-- Custom Actions for OpenRGB detection -->
+    <Property Id="OPENRGBINSTALLED" Value="0" />
+    <CustomAction Id="CheckOpenRGB" 
+                  Property="OPENRGBINSTALLED" 
+                  ExeCommand="cmd.exe /c &quot;tasklist /FI &quot;IMAGENAME eq OpenRGB.exe&quot; 2&gt;NUL | find /I /N &quot;OpenRGB.exe&quot;&gt;NUL &amp;&amp; echo 1 || echo 0&quot;"
+                  Directory="SystemFolder"
+                  Execute="immediate"
+                  Return="ignore" />
+    
+    <!-- Install Sequence -->
+    <InstallExecuteSequence>
+      <Custom Action="CheckOpenRGB" After="CostFinalize">NOT Installed</Custom>
+    </InstallExecuteSequence>
+    
+    <!-- User Interface -->
+    <UIRef Id="WixUI_InstallDir" />
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    
+    <!-- Custom UI Messages -->
+    <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
+    <WixVariable Id="WixUIBannerBmp" Value="Banner.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="Dialog.bmp" />
+    
+  </Product>
+</Wix>

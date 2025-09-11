@@ -1,0 +1,25 @@
+{
+  "application": {
+    "auto_connect": true,
+    "minimize_to_tray": false,
+    "check_updates": true,
+    "theme": "dark"
+  },
+  "openrgb": {
+    "host": "localhost",
+    "port": 6742,
+    "auto_connect": true,
+    "scan_interval": 30
+  },
+  "razer": {
+    "auto_connect": true,
+    "sdk_timeout": 5000
+  },
+  "devices": {
+    "auto_sync": false,
+    "default_brightness": 100,
+    "default_speed": 50
+  },
+  "last_modified": "2025-09-11T15:17:02.269043",
+  "version": "1.0"
+}
