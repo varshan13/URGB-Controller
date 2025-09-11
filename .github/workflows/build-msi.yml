@@ -1,0 +1,101 @@
+name: Build RGB Control Center MSI
+
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ 'v*' ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  build-msi:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install PyInstaller pyinstaller-hooks-contrib
+        pip install pygame Pillow numpy requests colorama
+        pip install PyOpenGL PyOpenGL-accelerate moderngl
+        
+    - name: Install WiX Toolset
+      run: |
+        # Download and install WiX Toolset v3.11
+        Invoke-WebRequest -Uri "https://github.com/wixtoolset/wix3/releases/download/wix3112rtm/wix311.exe" -OutFile "wix311.exe"
+        Start-Process -FilePath "wix311.exe" -ArgumentList "/quiet" -Wait
+        
+        # Add WiX to PATH
+        $wixPath = "${env:ProgramFiles(x86)}\WiX Toolset v3.11\bin"
+        if (Test-Path $wixPath) {
+          echo "$wixPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        }
+        
+    - name: Create assets directory and icon
+      run: |
+        # Create assets directory if it doesn't exist
+        if (!(Test-Path "assets")) {
+          New-Item -ItemType Directory -Path "assets"
+        }
+        
+        # Create a simple icon file placeholder
+        if (!(Test-Path "assets\icon.ico")) {
+          # Create minimal ICO file
+          $iconBytes = [byte[]](0x00,0x00,0x01,0x00,0x01,0x00,0x10,0x10,0x00,0x00,0x01,0x00,0x04,0x00,0x28,0x01,0x00,0x00,0x16,0x00,0x00,0x00,0x28,0x00,0x00,0x00,0x10,0x00,0x00,0x00,0x20,0x00,0x00,0x00,0x01,0x00,0x04,0x00,0x00,0x00,0x00,0x00,0x00,0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x80,0x00,0x00,0x80,0x00,0x00,0x00,0x80,0x80,0x00,0x80,0x00,0x00,0x00,0x80,0x00,0x80,0x00,0x80,0x80,0x00,0x00,0xC0,0xC0,0xC0,0x00,0x80,0x80,0x80,0x00,0x00,0x00,0xFF,0x00,0x00,0xFF,0x00,0x00,0x00,0xFF,0xFF,0x00,0xFF,0x00,0x00,0x00,0xFF,0x00,0xFF,0x00,0xFF,0xFF,0x00,0x00,0xFF,0xFF,0xFF,0x00)
+          [System.IO.File]::WriteAllBytes("assets\icon.ico", $iconBytes)
+        }
+        
+    - name: Build PyInstaller executable
+      run: |
+        echo "Building executable with PyInstaller..."
+        pyinstaller --clean --noconfirm pyinstaller_msi.spec
+        
+        # Verify executable was created
+        if (Test-Path "dist\RGBControlCenter\RGBControlCenter.exe") {
+          echo "✅ Executable built successfully"
+        } else {
+          echo "❌ Executable not found"
+          exit 1
+        }
+        
+    - name: Harvest files with heat.exe
+      run: |
+        echo "Harvesting files for WiX..."
+        heat.exe dir "dist\RGBControlCenter" -cg RGBControlCenterFiles -gg -scom -sreg -sfrag -srd -dr INSTALLFOLDER -out "installer\RGBControlCenterFiles.wxs"
+        
+    - name: Copy assets to installer directory
+      run: |
+        if (!(Test-Path "installer\assets")) {
+          New-Item -ItemType Directory -Path "installer\assets"
+        }
+        Copy-Item "assets\icon.ico" "installer\assets\icon.ico" -Force
+        
+    - name: Build MSI with WiX
+      run: |
+        echo "Building MSI..."
+        cd installer
+        candle.exe Product.wxs RGBControlCenterFiles.wxs
+        light.exe Product.wixobj RGBControlCenterFiles.wixobj -ext WixUIExtension -out RGBControlCenter.msi
+        Move-Item "RGBControlCenter.msi" "..\RGBControlCenter.msi" -Force
+        
+    - name: Create portable package
+      run: |
+        Copy-Item "dist\RGBControlCenter" "RGBControlCenter_Portable" -Recurse
+        Compress-Archive -Path "RGBControlCenter_Portable" -DestinationPath "RGBControlCenter_Portable.zip" -Force
+        
+    - name: Upload MSI artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: RGBControlCenter-MSI
+        path: |
+          RGBControlCenter.msi
+          RGBControlCenter_Portable.zip
