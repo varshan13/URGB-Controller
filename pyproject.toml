@@ -1,0 +1,18 @@
+[project]
+name = "repl-nix-workspace"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.11"
+dependencies = [
+    "colorama>=0.4.6",
+    "moderngl>=5.12.0",
+    "numpy>=2.3.3",
+    "openrgb-python>=0.3.5",
+    "pillow>=11.3.0",
+    "pygame>=2.6.1",
+    "pyinstaller>=6.15.0",
+    "pyinstaller-hooks-contrib>=2025.8",
+    "pyopengl>=3.1.10",
+    "pyopengl-accelerate>=3.1.10",
+    "requests>=2.32.5",
+]

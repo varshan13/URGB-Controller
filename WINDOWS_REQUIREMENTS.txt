@@ -1,0 +1,286 @@
+RGB Control Center - Windows Requirements & Installation
+======================================================
+
+SYSTEM REQUIREMENTS
+===================
+
+Minimum Requirements:
+• Windows 10 (version 1903 or later) or Windows 11
+• 64-bit processor and operating system
+• 4 GB RAM minimum (8 GB recommended)
+• 500 MB available disk space
+• OpenGL 3.3 compatible graphics card
+• USB ports for RGB devices
+• Administrator privileges
+
+Recommended Requirements:
+• Windows 11 with latest updates
+• 8 GB RAM or more
+• Dedicated graphics card with latest drivers
+• SSD storage for better performance
+• Multiple USB 3.0+ ports
+• Uninterrupted power supply for RGB hardware
+
+REQUIRED SOFTWARE DEPENDENCIES
+==============================
+
+Essential (Automatically Installed):
+• Microsoft Visual C++ Redistributable (latest)
+• .NET Framework 4.7.2 or later
+• Windows Universal C Runtime
+
+RGB Hardware Support Software:
+• OpenRGB Server (universal RGB control)
+  Download: https://openrgb.org/
+  
+• MSI Center or Dragon Center (for MSI motherboards)
+  Download: https://www.msi.com/support/download/
+
+• Razer Synapse 3.0 (for Razer peripherals)
+  Download: https://www.razer.com/synapse-3
+
+• L-Connect 3 (for Lian Li devices)
+  Download: https://lian-li.com/downloads/
+
+• ASUS Aura Sync (for compatible RAM/motherboards)
+  Download: https://www.asus.com/support/download-center/
+
+• ASRock Polychrome RGB (for ASRock motherboards/GPUs)
+  Download: https://www.asrock.com/support/
+
+SUPPORTED HARDWARE
+==================
+
+Motherboards:
+✅ MSI (B450, B550, B650, X470, X570, X670, Z390, Z490, Z590, Z690, Z790)
+✅ ASRock (B450, B550, X570, Z490, Z590, Z690)
+✅ ASUS (with Aura Sync support)
+✅ Gigabyte (with RGB Fusion support)
+
+Graphics Cards:
+✅ ASRock Phantom Gaming series
+✅ MSI Gaming series with RGB
+✅ ASUS ROG series
+✅ Gigabyte Aorus series
+✅ Most modern GPUs with RGB headers
+
+Memory (RAM):
+✅ G.Skill Trident Z RGB/Neo series
+✅ Corsair Vengeance RGB Pro/LPX
+✅ Kingston HyperX Predator RGB
+✅ ADATA XPG Spectrix series
+✅ TeamGroup T-Force series
+
+Peripherals:
+✅ Razer Basilisk series (all models)
+✅ Evofox Ronin wireless keyboard
+✅ Most RGB keyboards and mice via OpenRGB
+✅ RGB headset stands and accessories
+
+Fans & Lighting:
+✅ ARGB fans (3-pin 5V header compatible)
+✅ Lian Li Strimmer cables (all generations)
+✅ RGB strips and lighting kits
+✅ Custom ARGB solutions via OpenRGB
+
+NETWORK REQUIREMENTS
+====================
+
+Local Network Services:
+• OpenRGB Server: localhost:6742 (TCP)
+• Razer Chroma SDK: localhost:54235 (HTTP)
+• MSI SDK: localhost varies (TCP)
+
+Firewall Configuration:
+• Allow RGB Control Center through Windows Firewall
+• Allow OpenRGB Server through Windows Firewall
+• Allow vendor RGB software through Windows Firewall
+
+Internet (Optional):
+• Software updates and driver downloads
+• Hardware database updates
+• Community profile sharing (future feature)
+
+INSTALLATION METHODS
+====================
+
+Method 1: MSI Installer (Recommended)
+-------------------------------------
+1. Download RGBControlCenter.msi
+2. Right-click → "Run as administrator"
+3. Follow installation wizard
+4. Launch from Start Menu
+
+Benefits:
+✅ Automatic dependency installation
+✅ Start Menu and desktop shortcuts
+✅ File association for .rgbprofile files
+✅ Clean uninstall through Add/Remove Programs
+✅ Windows system integration
+
+Method 2: Portable Version
+-------------------------
+1. Download RGBControlCenter_Portable.zip
+2. Extract to desired folder
+3. Run RGBControlCenter.exe as administrator
+
+Benefits:
+✅ No installation required
+✅ Portable between computers
+✅ No registry changes
+✅ Can run from USB drive
+
+FIRST RUN SETUP
+===============
+
+Step 1: Install Hardware Software
+---------------------------------
+Install the appropriate software for your hardware:
+• MSI Center (MSI motherboards)
+• Razer Synapse (Razer peripherals)
+• OpenRGB Server (universal support)
+• Vendor-specific software as needed
+
+Step 2: Start Background Services
+---------------------------------
+Ensure these services are running:
+• OpenRGB Server (openrgb.exe --server)
+• MSI SDK service (if using MSI hardware)
+• Razer services (if using Razer hardware)
+
+Step 3: Launch RGB Control Center
+---------------------------------
+1. Run as Administrator (required for hardware access)
+2. Click "Scan Devices" to detect hardware
+3. Configure device settings in the interface
+4. Set up 3D device placement if desired
+
+Step 4: Create Your First Profile
+---------------------------------
+1. Set colors and effects for each device
+2. Adjust brightness and speed settings
+3. Save profile with a descriptive name
+4. Test synchronization across all devices
+
+TROUBLESHOOTING
+===============
+
+Installation Issues:
+-------------------
+❌ "This app can't run on your PC"
+   → Ensure you're on Windows 10/11 64-bit
+   → Download from a trusted source
+   → Check Windows updates are installed
+
+❌ "Installation failed"
+   → Run installer as Administrator
+   → Temporarily disable antivirus
+   → Check available disk space
+   → Close all RGB software before installing
+
+Runtime Issues:
+--------------
+❌ "No devices detected"
+   → Install appropriate vendor software
+   → Start OpenRGB server
+   → Run application as Administrator
+   → Check USB connections
+
+❌ "Connection failed" errors
+   → Restart RGB Control Center
+   → Restart OpenRGB server
+   → Check Windows Firewall settings
+   → Verify localhost connectivity
+
+❌ "Access denied" errors
+   → Always run as Administrator
+   → Check user account permissions
+   → Disable conflicting RGB software temporarily
+
+❌ Application crashes or freezes
+   → Update graphics drivers
+   → Close other RGB applications
+   → Check system requirements
+   → Restart in compatibility mode
+
+Performance Issues:
+------------------
+❌ Slow response or lag
+   → Close unnecessary RGB software
+   → Reduce animation effects
+   → Update system drivers
+   → Check system resources
+
+❌ High CPU/memory usage
+   → Limit number of active effects
+   → Reduce update frequency
+   → Close background applications
+   → Monitor resource usage
+
+SECURITY CONSIDERATIONS
+======================
+
+Administrator Rights:
+• Required for hardware-level RGB control
+• Needed for registry access and device communication
+• Windows will prompt for elevation
+
+Windows Defender:
+• May flag RGB software as potentially unwanted
+• Add exclusions for RGB Control Center folder
+• Add exclusions for OpenRGB and vendor software
+
+Firewall Settings:
+• Allow local network communication
+• Enable RGB Control Center and OpenRGB
+• Monitor for suspicious network activity
+
+UNINSTALLATION
+==============
+
+MSI Installer Version:
+1. Go to Settings → Apps → Apps & features
+2. Find "RGB Control Center"
+3. Click Uninstall and follow prompts
+4. Restart computer to complete removal
+
+Portable Version:
+1. Close RGB Control Center
+2. Delete the application folder
+3. Remove any created shortcuts
+4. Clear temporary files if desired
+
+Clean Removal:
+• Remove from startup programs if added
+• Delete saved profiles if not needed
+• Remove firewall exceptions
+• Restart RGB services if other software uses them
+
+SUPPORT AND UPDATES
+==================
+
+Getting Help:
+• Check this requirements document
+• Review the installation guide
+• Check Windows Event Viewer for errors
+• Contact support with system information
+
+Version Updates:
+• MSI installer can upgrade automatically
+• Portable version requires manual replacement
+• Backup profiles before major updates
+• Check compatibility with new hardware
+
+Hardware Support:
+• Report hardware compatibility issues
+• Submit vendor requests for new support
+• Share working configurations with community
+• Help test beta features
+
+===
+
+For technical support and updates:
+GitHub: https://github.com/rgbcontrolcenter
+Documentation: Included with installation
+
+Enjoy your unified RGB control experience! 🌈✨

@@ -1,0 +1,14 @@
+# Build requirements for RGB Control Center executable
+pyinstaller>=6.0.0
+pyinstaller-hooks-contrib>=2024.0
+
+# Core application dependencies
+colorama>=0.4.6
+moderngl>=5.12.0
+numpy>=1.24.0
+openrgb-python>=0.3.0
+pillow>=10.0.0
+pygame>=2.6.0
+pyopengl>=3.1.0
+pyopengl-accelerate>=3.1.0
+requests>=2.31.0
