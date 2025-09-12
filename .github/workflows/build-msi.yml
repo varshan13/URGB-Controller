@@ -30,76 +30,196 @@ jobs:
         
     - name: Install WiX Toolset
       run: |
-        # Download and install WiX Toolset v3.11
+        Write-Host "Downloading WiX Toolset..."
         Invoke-WebRequest -Uri "https://github.com/wixtoolset/wix3/releases/download/wix3112rtm/wix311.exe" -OutFile "wix311.exe"
+        
+        Write-Host "Installing WiX Toolset..."
         Start-Process -FilePath "wix311.exe" -ArgumentList "/quiet" -Wait
         
         # Add WiX to PATH
         $wixPath = "${env:ProgramFiles(x86)}\WiX Toolset v3.11\bin"
         if (Test-Path $wixPath) {
+          Write-Host "Adding WiX to PATH: $wixPath"
           echo "$wixPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        } else {
+          Write-Error "WiX installation path not found: $wixPath"
+          exit 1
         }
         
-    - name: Create assets directory and icon
+    - name: Verify WiX installation
       run: |
-        # Create assets directory if it doesn't exist
-        if (!(Test-Path "assets")) {
-          New-Item -ItemType Directory -Path "assets"
-        }
-        
-        # Skip icon creation - let PyInstaller work without icon
-        # The spec file will handle the missing icon gracefully
-        echo "Assets directory created, skipping icon for now"
+        Write-Host "Verifying WiX installation..."
+        candle.exe -?
+        light.exe -?
+        heat.exe -?
+        Write-Host "✅ WiX Toolset verified successfully"
         
     - name: Build PyInstaller executable
       run: |
-        echo "Building executable with PyInstaller..."
+        Write-Host "Building executable with PyInstaller..."
+        
+        # Clean previous builds
+        if (Test-Path "build") { Remove-Item "build" -Recurse -Force }
+        if (Test-Path "dist") { Remove-Item "dist" -Recurse -Force }
+        
+        # Build with PyInstaller
         pyinstaller --clean --noconfirm pyinstaller_msi.spec
         
         # Verify executable was created
         if (Test-Path "dist\RGBControlCenter\RGBControlCenter.exe") {
-          echo "✅ Executable built successfully"
+          Write-Host "✅ Executable built successfully"
+          Get-ChildItem "dist\RGBControlCenter\RGBControlCenter.exe" | Select-Object Name, Length, LastWriteTime
         } else {
-          echo "❌ Executable not found"
+          Write-Error "❌ Executable not found in dist\RGBControlCenter\"
           exit 1
         }
         
     - name: Harvest files with heat.exe
       run: |
-        echo "Harvesting files for WiX..."
-        heat.exe dir "dist\RGBControlCenter" -cg RGBControlCenterFiles -gg -scom -sreg -sfrag -srd -dr INSTALLFOLDER -out "installer\RGBControlCenterFiles.wxs"
+        Write-Host "Harvesting files for WiX..."
+        cd installer
+        heat.exe dir "..\dist\RGBControlCenter" -cg RGBControlCenterFiles -gg -scom -sreg -sfrag -srd -dr INSTALLFOLDER -out "RGBControlCenterFiles.wxs"
         
-    - name: Copy assets to installer directory
-      run: |
-        if (!(Test-Path "installer\assets")) {
-          New-Item -ItemType Directory -Path "installer\assets"
+        if (Test-Path "RGBControlCenterFiles.wxs") {
+          Write-Host "✅ Files harvested successfully"
+        } else {
+          Write-Error "❌ File harvesting failed"
+          exit 1
         }
-        Copy-Item "assets\icon.ico" "installer\assets\icon.ico" -Force
         
-      - name: Build MSI with WiX
+    - name: Fix WiX configuration for building
       run: |
-        echo "Building MSI..."
+        Write-Host "Creating streamlined Product.wxs for GitHub Actions..."
+        cd installer
+        
+        $productWxs = @"
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*" 
+           Name="RGB Control Center" 
+           Language="1033" 
+           Version="1.0.0.0" 
+           Manufacturer="RGB Gaming Solutions" 
+           UpgradeCode="D2B8E8B0-4F3A-4B2C-9E1D-5A7B3C9F2E8A">
+    
+    <Package InstallerVersion="200" 
+             Compressed="yes" 
+             InstallScope="perMachine" 
+             Description="RGB Control Center - Unified RGB Hardware Control" />
+    
+    <MajorUpgrade DowngradeErrorMessage="A newer version is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+    
+    <Icon Id="RGBControlCenter.ico" SourceFile="assets\icon.ico" />
+    <Property Id="ARPPRODUCTICON" Value="RGBControlCenter.ico" />
+    
+    <Feature Id="ProductFeature" Title="RGB Control Center" Level="1">
+      <ComponentGroupRef Id="RGBControlCenterFiles" />
+      <ComponentRef Id="StartMenuShortcut" />
+      <ComponentRef Id="DesktopShortcut" />
+    </Feature>
+    
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFiles64Folder">
+        <Directory Id="INSTALLFOLDER" Name="RGB Control Center" />
+      </Directory>
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="RGB Control Center"/>
+      </Directory>
+      <Directory Id="DesktopFolder" Name="Desktop" />
+    </Directory>
+    
+    <DirectoryRef Id="ApplicationProgramsFolder">
+      <Component Id="StartMenuShortcut" Guid="1B2E3D4C-5A6B-4C8D-9E1F-2A3B4C5D6E7F">
+        <Shortcut Id="ApplicationStartMenuShortcut"
+                  Name="RGB Control Center"
+                  Target="[INSTALLFOLDER]RGBControlCenter.exe"
+                  WorkingDirectory="INSTALLFOLDER"
+                  Icon="RGBControlCenter.ico"/>
+        <RemoveFolder Id="RemoveStartMenuFolder" On="uninstall"/>
+        <RegistryValue Root="HKCU" Key="Software\RGB Gaming Solutions\RGB Control Center" 
+                       Name="StartMenuShortcut" Type="integer" Value="1" KeyPath="yes"/>
+      </Component>
+    </DirectoryRef>
+    
+    <DirectoryRef Id="DesktopFolder">
+      <Component Id="DesktopShortcut" Guid="2C3F4E5D-6B7A-5D9E-AF2E-3B4C5D6E7F8A">
+        <Shortcut Id="ApplicationDesktopShortcut"
+                  Name="RGB Control Center"
+                  Target="[INSTALLFOLDER]RGBControlCenter.exe"
+                  WorkingDirectory="INSTALLFOLDER"
+                  Icon="RGBControlCenter.ico"/>
+        <RegistryValue Root="HKCU" Key="Software\RGB Gaming Solutions\RGB Control Center" 
+                       Name="DesktopShortcut" Type="integer" Value="1" KeyPath="yes"/>
+      </Component>
+    </DirectoryRef>
+    
+    <UIRef Id="WixUI_InstallDir" />
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <WixVariable Id="WixUILicenseRtf" Value="License.rtf" />
+    
+  </Product>
+</Wix>
+"@
+        
+        Copy-Item "Product.wxs" "Product.wxs.backup"
+        $productWxs | Out-File -FilePath "Product.wxs" -Encoding UTF8
+        Write-Host "✅ Product.wxs streamlined for building"
+        
+    - name: Build MSI with WiX
+      run: |
+        Write-Host "Building MSI with WiX..."
         cd installer
         
         # Compile WXS files
-        candle.exe Product.wxs RGBControlCenterFiles.wxs
+        candle.exe Product.wxs RGBControlCenterFiles.wxs -arch x64 -ext WixUIExtension
+        
+        if (!(Test-Path "Product.wixobj") -or !(Test-Path "RGBControlCenterFiles.wixobj")) {
+          Write-Error "❌ WiX compilation failed"
+          exit 1
+        }
         
         # Link MSI
-        light.exe Product.wixobj RGBControlCenterFiles.wixobj -ext WixUIExtension -out RGBControlCenter.msi
+        light.exe Product.wixobj RGBControlCenterFiles.wixobj -ext WixUIExtension -out RGBControlCenter.msi -spdb
         
-        # Move MSI to root
         if (Test-Path "RGBControlCenter.msi") {
+          $msiInfo = Get-ChildItem "RGBControlCenter.msi"
+          Write-Host "✅ MSI created: $($msiInfo.Name) - $([math]::Round($msiInfo.Length/1MB, 2)) MB"
           Move-Item "RGBControlCenter.msi" "..\RGBControlCenter.msi" -Force
-          echo "✅ MSI created successfully"
         } else {
-          echo "❌ MSI creation failed"
+          Write-Error "❌ MSI creation failed"
           exit 1
         }
         
     - name: Create portable package
       run: |
+        Write-Host "Creating portable package..."
+        
+        if (Test-Path "RGBControlCenter_Portable") {
+          Remove-Item "RGBControlCenter_Portable" -Recurse -Force
+        }
+        
         Copy-Item "dist\RGBControlCenter" "RGBControlCenter_Portable" -Recurse
+        
+        $runScript = @"
+@echo off
+title RGB Control Center - Portable
+echo Starting RGB Control Center...
+cd /d "%~dp0"
+
+net session >nul 2>&1
+if %errorLevel% neq 0 (
+    echo WARNING: Administrator privileges recommended for full hardware access.
+    pause
+)
+
+RGBControlCenter.exe
+if %errorLevel% neq 0 pause
+"@
+        $runScript | Out-File -FilePath "RGBControlCenter_Portable\Run_RGB_Control_Center.bat" -Encoding ASCII
+        
         Compress-Archive -Path "RGBControlCenter_Portable" -DestinationPath "RGBControlCenter_Portable.zip" -Force
+        Write-Host "✅ Portable package created"
         
     - name: Upload MSI artifact
       uses: actions/upload-artifact@v4
@@ -108,3 +228,36 @@ jobs:
         path: |
           RGBControlCenter.msi
           RGBControlCenter_Portable.zip
+        retention-days: 90
+        
+    - name: Create Release (on tag)
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          RGBControlCenter.msi
+          RGBControlCenter_Portable.zip
+        name: RGB Control Center ${{ github.ref_name }}
+        body: |
+          ## 🎮 RGB Control Center Professional Release
+          
+          **Unified RGB Hardware Control for Windows Gaming Setups**
+          
+          ### 📦 Downloads:
+          - **RGBControlCenter.msi** - Professional Windows installer (recommended)
+          - **RGBControlCenter_Portable.zip** - Portable version (no installation)
+          
+          ### ✨ Features:
+          - 🎨 Control MSI, Razer, Lian Li, G.Skill, ASRock hardware
+          - 🌙 Modern dark theme with 3D visualization
+          - 💾 Profile management and device sync
+          - 🔌 OpenRGB universal compatibility
+          
+          ### 🚀 Installation:
+          1. Download RGBControlCenter.msi
+          2. Run as Administrator  
+          3. Follow installation wizard
+          
+          Ready to unify your RGB setup! 🌈
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
