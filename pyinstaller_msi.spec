@@ -135,7 +135,7 @@ exe = EXE(
     upx=True,
     console=False,  # Windows app, not console
     disable_windowed_traceback=False,
-    icon='assets/icon.ico' if os.path.exists('assets/icon.ico') else None,
+    icon=None,  # Skip icon for now, can be added later
 )
 
 # Collect all files into dist/RGBControlCenter/ folder
