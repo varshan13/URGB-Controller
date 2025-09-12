@@ -76,13 +76,25 @@ jobs:
         }
         Copy-Item "assets\icon.ico" "installer\assets\icon.ico" -Force
         
-    - name: Build MSI with WiX
+      - name: Build MSI with WiX
       run: |
         echo "Building MSI..."
         cd installer
+        
+        # Compile WXS files
         candle.exe Product.wxs RGBControlCenterFiles.wxs
+        
+        # Link MSI
         light.exe Product.wixobj RGBControlCenterFiles.wixobj -ext WixUIExtension -out RGBControlCenter.msi
-        Move-Item "RGBControlCenter.msi" "..\RGBControlCenter.msi" -Force
+        
+        # Move MSI to root
+        if (Test-Path "RGBControlCenter.msi") {
+          Move-Item "RGBControlCenter.msi" "..\RGBControlCenter.msi" -Force
+          echo "✅ MSI created successfully"
+        } else {
+          echo "❌ MSI creation failed"
+          exit 1
+        }
         
     - name: Create portable package
       run: |
