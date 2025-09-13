@@ -92,7 +92,7 @@ jobs:
         Write-Host "Creating streamlined Product.wxs for GitHub Actions..."
         cd installer
         
-        $productWxs = @"
+        $productWxs = @'
 <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
   <Product Id='*' 
            Name='RGB Control Center' 
@@ -159,7 +159,7 @@ jobs:
     
   </Product>
 </Wix>
-"@
+'@
         
         Copy-Item "Product.wxs" "Product.wxs.backup"
         $productWxs | Out-File -FilePath "Product.wxs" -Encoding UTF8
